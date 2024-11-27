@@ -14,7 +14,7 @@ class Linkedlist{
 private:
     Node<T>* head= nullptr;
     Node<T>* endp= nullptr;
-    int size=0;
+    int nb=0;
 public:
     class Iterator{
     private:
@@ -63,6 +63,7 @@ public:
     }
     Linkedlist& operator=(const Linkedlist<T>& other)
     {
+        this->clear();
         for (auto &i : other)
         {
             this->push_back(i);
@@ -75,7 +76,7 @@ public:
     Const_Iterator end() const { return Const_Iterator(nullptr); }
     Iterator push_back(T x)
     {
-        size++;
+        nb++;
         if(endp== nullptr)
         {
             head=new Node<T>(x, nullptr);
@@ -114,13 +115,13 @@ public:
         return it;
     }
     T& operator[](int idx){
-        if (idx>=size)
+        if (idx>=nb)
             throw "index out of range";
         return *index(idx);
     }
     const T& operator[](int idx) const
     {
-        if (idx >= size)
+        if (idx >= nb)
             throw "index out of range";
         return *index(idx);
     }
@@ -132,9 +133,9 @@ public:
     }
     Iterator insert(int i, T x) // to push_back data to the head,make first argument <=-1.
     {
-        if(i>=size)
+        if(i>=nb)
             throw "index out of range";
-        size++;
+        nb++;
         if(i>-1)
             return insert(index(i),x);
         else{
@@ -182,14 +183,17 @@ public:
                 delete old;
                 it = this->begin();
             }
-            size--;
+            nb--;
         }
         else
         {
             std::cout<<"invalid";
         }
     }
-    virtual ~Linkedlist(){
+    int size() { return nb; }
+    void clear(){
+        if(nb==0)
+            return;
         Node<T>* nextptr=head->next;
         Node<T>* ptr=head;
         while (nextptr->next!= nullptr)
@@ -198,6 +202,12 @@ public:
             ptr=nextptr;
             nextptr=nextptr->next;}
         delete nextptr;
+        head=nullptr;
+        endp=nullptr;
+        nb = 0;
+    }
+    virtual ~Linkedlist(){
+        this->clear();
     }
 };
 
@@ -210,14 +220,14 @@ std::ostream& operator<<(std::ostream&os,Linkedlist<T>& l)
     return os;
 }
 
-#endif
-/*
-int main() {
+namespace LINKED_LIST_TEST
+{
+int mian() {
     Linkedlist<int> l2;
     {
         Linkedlist<int> *L = new Linkedlist<int>;
         Linkedlist<int> &l = *L;
-
+        Linkedlist<int> X;
         l << 1 << 2 << 3 << 4;
         std::cout << l;
 
@@ -237,13 +247,15 @@ int main() {
 
     std::cout << l2;
 
-    // try{
-    //     std::cout<<l[5];
-    // }
-    // catch(const char* err)
-    // {
-    //     std::cout << err;
-    // }
+    try{
+        std::cout<<l2[5];
+    }
+    catch(const char* err)
+    {
+        std::cout << err;
+    }
     return 0;
 }
-*/
+}
+#endif
+
