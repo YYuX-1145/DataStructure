@@ -32,6 +32,10 @@ public:
         {
             return ptr!=other.ptr;
         }
+        bool operator==(const Iterator &other)
+        {
+            return ptr == other.ptr;
+        }
         T& operator*(){return ptr->data;}
     };
     class Const_Iterator
@@ -47,11 +51,15 @@ public:
             ptr = ptr->next;
             return *this;
         }
+        bool operator==(const Const_Iterator &other)
+        {
+            return ptr == other.ptr;
+        }
         bool operator!=(const Const_Iterator &other)
         {
             return ptr != other.ptr;
         }
-        T &operator*() { return ptr->data; }
+        const T& operator*() { return ptr->data; }
     };
     Linkedlist(){}
     Linkedlist(const Linkedlist<T>& other)
@@ -125,11 +133,25 @@ public:
             throw "index out of range";
         return *index(idx);
     }
-    Iterator insert(const Iterator i, T x) // insert data to the position behind the given iterator/index, different from list.
+    Iterator insert(Iterator i, T x) // insert data to the position after the given iterator/index, different from list.
     {
         Node<T>* nextptr=i.ptr->next;        
         i.ptr->next = new Node<T>(x, nextptr);
         return Iterator(i.ptr->next, i.ptr);
+    }
+    Iterator insert_at(Iterator i, T x) // insert data to the given position.
+    {
+        Node<T> *nextptr = i.ptr;
+        if(i.pre==nullptr)
+        {
+            insert(-1,x);
+            return this->begin();
+        }            
+        else
+        {
+            i.pre->next = new Node<T>(x, nextptr);
+            return Iterator(i.pre->next, i.pre); 
+        }        
     }
     Iterator insert(int i, T x) // to push_back data to the head,make first argument <=-1.
     {
@@ -194,14 +216,15 @@ public:
     void clear(){
         if(nb==0)
             return;
-        Node<T>* nextptr=head->next;
-        Node<T>* ptr=head;
-        while (nextptr->next!= nullptr)
+        Iterator it = this->begin();
+        ++ it;
+        while(true)
         {
-            delete ptr;
-            ptr=nextptr;
-            nextptr=nextptr->next;}
-        delete nextptr;
+            delete it.pre;
+            if (it == this->end())
+                break;
+            ++it;
+        }
         head=nullptr;
         endp=nullptr;
         nb = 0;
@@ -212,9 +235,9 @@ public:
 };
 
 template<class T>
-std::ostream& operator<<(std::ostream&os,Linkedlist<T>& l)
+std::ostream& operator<<(std::ostream&os,const Linkedlist<T>& l)
 {
-    for(auto i:l)
+    for(auto& i:l)
         os<<i;
     os<<std::endl;
     return os;
@@ -222,33 +245,31 @@ std::ostream& operator<<(std::ostream&os,Linkedlist<T>& l)
 
 namespace LINKED_LIST_TEST
 {
-int mian() {
-    Linkedlist<int> l2;
-    {
-        Linkedlist<int> *L = new Linkedlist<int>;
-        Linkedlist<int> &l = *L;
-        Linkedlist<int> X;
-        l << 1 << 2 << 3 << 4;
-        std::cout << l;
+int mian() {    
+    Linkedlist<int> *L = new Linkedlist<int>;
+    Linkedlist<int> &l = *L;
+    Linkedlist<int> X;
+    X<<1;
+    l << 1 << 2 << 3 << 4;
+    std::cout << l;
 
-        l.insert(3, 5);
-        std::cout << l;
+    l.insert_at(l.index(2), 5);
+    std::cout << l;
 
-        l.insert(-1, 9);
-        l[1] = 8;
-        std::cout << l;
+    l.insert(-1, 9);
+    l[1] = 8;
+    std::cout << l;
 
-        auto it = l.find(9);
-        l.erase(it);
-        std::cout << l;
+    auto it = l.find(9);
+    l.erase(it);
+    std::cout << l;
 
-        l2 = l;
-    }
-
+    const Linkedlist<int> l2 = l;
     std::cout << l2;
 
-    try{
-        std::cout<<l2[5];
+    try
+    {
+        std::cout << l2[5];
     }
     catch(const char* err)
     {
