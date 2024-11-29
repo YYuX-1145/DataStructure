@@ -1,9 +1,10 @@
-#include "linkedlist.h"
+#include "circularlinkedlist.h"
 using namespace std;    
 struct elem
     {
         float coefficient;
         int pow;
+        elem(){}
         elem(float c,int p):coefficient(c),pow(p){}
     };
 
@@ -25,18 +26,28 @@ float Power(float x,int i)
 
 class Polynomial{
     private:
-    Linkedlist<elem> l;
+    CircularLinkedlist<elem> l;
     public:
     void add(float c,int p){
+        if(c==0)
+            return;
         auto it=l.begin();
         while (it != l.end() && (*it).pow > p)
         {
             ++it;
         }
         if (it == l.end())
+        {
             l.push_back(elem(c, p));
+        }            
         else if ((*it).pow == p)
+        {
             (*it).coefficient += c;
+            if((*it).coefficient==0)
+            {
+                l.erase(it);
+            }
+        }            
         else
             l.insert_at(it, elem(c, p));
     }
@@ -71,7 +82,7 @@ class Polynomial{
 
 int main()
 {
-    LINKED_LIST_TEST::mian();
+    CIRCULAR_LINKED_LIST_TEST::mian();
     Polynomial p,p2;
     p.add(1, 2);
     p.add(1, 2);
@@ -79,6 +90,7 @@ int main()
     p.show();
     p2.add(5,5);
     p2.add(1,2);
+    p2.add(-1,3);
     p2.show();
     p=p+p2;
     p.show();
