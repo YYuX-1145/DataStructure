@@ -1,16 +1,17 @@
-#ifndef LINKED_LIST_H
-#define LINKED_LIST_H
+#ifndef DOUBLE_LINKED_LIST_H
+#define DOUBLE_LINKED_LIST_H
 #include <iostream>
 
 template<class T>
 struct Node{
     T data;
+    Node<T>* pre;
     Node<T>* next;
-    Node(T x,Node<T>* p):data(x),next(p){}
+    Node(T x,Node<T>* p,Node<T>* n):pre(p),data(x),next(n){}
 };
 
 template<class T>
-class Linkedlist{
+class DoubleLinkedlist{
 private:
     Node<T>* head= nullptr;
     Node<T>* endp= nullptr;
@@ -18,14 +19,16 @@ private:
 public:
     class Iterator{
     private:
-        Node<T>* pre;
         Node<T>* ptr;
     public:
-        friend class Linkedlist;
-        Iterator(Node<T> *p, Node<T> *pre=nullptr) : ptr(p), pre(pre) {}
+        friend class DoubleLinkedlist;
+        Iterator(Node<T> *p) : ptr(p){}
         Iterator& operator++(){
-            pre=ptr;
             ptr=ptr->next;
+            return *this;
+        }
+        Iterator& operator--(){
+            ptr=ptr->pre;
             return *this;
         }
         bool operator!=(const Iterator& other)
@@ -38,38 +41,39 @@ public:
         }
         T& operator*(){return ptr->data;}
     };
-    class Const_Iterator
-    {
+    class Const_Iterator{
     private:
-        Node<T> *pre;
-        Node<T> *ptr;
+        Node<T>* ptr;
     public:
-        Const_Iterator(Node<T> *p, Node<T> *pre=nullptr) : ptr(p), pre(pre) {}
-        Const_Iterator &operator++()
-        {
-            pre = ptr;
-            ptr = ptr->next;
+        friend class DoubleLinkedlist;
+        Const_Iterator(Node<T> *p) : ptr(p){}
+        Const_Iterator& operator++(){
+            ptr=ptr->next;
             return *this;
+        }
+        Const_Iterator& operator--(){
+            ptr=ptr->pre;
+            return *this;
+        }
+        bool operator!=(const Const_Iterator& other)
+        {
+            return ptr!=other.ptr;
         }
         bool operator==(const Const_Iterator &other)
         {
             return ptr == other.ptr;
         }
-        bool operator!=(const Const_Iterator &other)
-        {
-            return ptr != other.ptr;
-        }
-        const T& operator*() { return ptr->data; }
+        const T& operator*(){return ptr->data;}
     };
-    Linkedlist(){}
-    Linkedlist(const Linkedlist<T>& other)
+    DoubleLinkedlist(){}
+    DoubleLinkedlist(DoubleLinkedlist<T>& other)
     {
         for(auto& i:other)
         {
             this->push_back(i);
         }
     }
-    Linkedlist& operator=(const Linkedlist<T>& other)
+    DoubleLinkedlist& operator=(DoubleLinkedlist<T>& other)
     {
         this->clear();
         for (auto &i : other)
@@ -80,26 +84,26 @@ public:
     }
     Iterator begin() { return Iterator(head); }
     Iterator end() { return Iterator(nullptr); }
-    Const_Iterator begin() const {return Const_Iterator(head);}
+    Const_Iterator begin() const { return Const_Iterator(head); }
     Const_Iterator end() const { return Const_Iterator(nullptr); }
     Iterator push_back(T x)
     {
         nb++;
         if(endp== nullptr)
         {
-            head=new Node<T>(x, nullptr);
+            head=new Node<T>(x, nullptr,nullptr);
             endp=head;
-            return Iterator(head, nullptr);
+            return Iterator(head);
         }
         else
         {
-            endp->next=new Node<T>(x, nullptr);
-            Iterator i(endp->next, endp);
+            endp->next=new Node<T>(x, endp,nullptr);
+            Iterator i(endp->next);
             endp=endp->next;
             return i;
         }
         }
-    Linkedlist<T>& operator<<(T x)
+    DoubleLinkedlist<T>& operator<<(T x)
     {
         this->push_back(x);
         return *this;
@@ -108,15 +112,6 @@ public:
     {
         Iterator it=begin();
         for(int i=0;it!=this->end()&&i<ind;i++)
-        {
-            ++it;
-        }
-        return it;
-    }
-    Const_Iterator index(int ind) const // return end() if index out of range
-    {
-        Const_Iterator it = begin();
-        for (int i = 0; it != this->end() && i < ind; i++)
         {
             ++it;
         }
@@ -136,21 +131,22 @@ public:
     Iterator insert(Iterator i, T x) // insert data to the position after the given iterator/index, different from list.
     {
         Node<T>* nextptr=i.ptr->next;        
-        i.ptr->next = new Node<T>(x, nextptr);
-        return Iterator(i.ptr->next, i.ptr);
+        i.ptr->next = new Node<T>(x, i.ptr,nextptr);
+        nextptr->pre=i.ptr->next;
+        return Iterator(i.ptr->next);
     }
     Iterator insert_at(Iterator i, T x) // insert data to the given position.
     {
         Node<T> *nextptr = i.ptr;
-        if(i.pre==nullptr)
+        if(i.ptr->pre==nullptr)
         {
             insert(-1,x);
             return this->begin();
         }            
         else
         {
-            i.pre->next = new Node<T>(x, nextptr);
-            return Iterator(i.pre->next, i.pre); 
+            i.ptr->pre->next = new Node<T>(x, i.ptr->pre,nextptr);
+            return Iterator(i.ptr->pre->next); 
         }        
     }
     Iterator insert(int i, T x) // to push_back data to the head,make first argument <=-1.
@@ -162,7 +158,8 @@ public:
             return insert(index(i),x);
         else{
             Node<T>* nextptr=head;
-            head=new Node<T>(x,nextptr);
+            head=new Node<T>(x,nullptr,nextptr);
+            head->next->pre=head;
             return Iterator(head);
         }
         }
@@ -177,18 +174,7 @@ public:
         }
         return it;
     }
-    Const_Iterator find(T tar) const
-    {
-        Iterator it = this->begin();
-        while (it != this->end())
-        {
-            if (*it == tar)
-                return it;
-            ++it;
-        }
-        return it;
-    }
-    int count(T tar) const
+    int count(T tar)
     {
         int ret=0;
         for(auto& i:*this)
@@ -206,7 +192,8 @@ public:
         {
             if(it!=this->begin())
             {
-                it.pre->next=it.ptr->next;
+                it.ptr->pre->next=it.ptr->next;
+                it.ptr->next->pre=it.ptr->pre;
                 delete it.ptr;
                 it=this->end();
             }
@@ -215,6 +202,7 @@ public:
                 Node<T> *old = head;
                 head = head->next;
                 delete old;
+                head->next->pre=head;
                 it = this->begin();
             }
             nb--;
@@ -231,23 +219,23 @@ public:
         Iterator it = this->begin();
         ++ it;
         while(true)
-        {
-            delete it.pre;
+        {   
             if (it == this->end())
                 break;
+            delete it.ptr->pre;            
             ++it;
         }
         head=nullptr;
         endp=nullptr;
         nb = 0;
     }
-    virtual ~Linkedlist(){
+    virtual ~DoubleLinkedlist(){
         this->clear();
     }
 };
 
 template<class T>
-std::ostream& operator<<(std::ostream&os,const Linkedlist<T>& l)
+std::ostream& operator<<(std::ostream&os,const DoubleLinkedlist<T>& l)
 {
     for(auto& i:l)
         os<<i;
@@ -255,12 +243,12 @@ std::ostream& operator<<(std::ostream&os,const Linkedlist<T>& l)
     return os;
 }
 
-namespace LINKED_LIST_TEST
+namespace DOUBLE_LINKED_LIST_TEST
 {
 int mian() {    
-    Linkedlist<int> *L = new Linkedlist<int>;
-    Linkedlist<int> &l = *L;
-    Linkedlist<int> X;
+    DoubleLinkedlist<int> *L = new DoubleLinkedlist<int>;
+    DoubleLinkedlist<int> &l = *L;
+    DoubleLinkedlist<int> X;
     X<<1;
     l << 1 << 2 << 3 << 4;
     std::cout << l;
@@ -280,7 +268,7 @@ int mian() {
     l.push_back(1);
     std::cout<<l.count(1)<<std::endl;
 
-    const Linkedlist<int> l2 = l;
+    const DoubleLinkedlist<int> l2 = l;
     std::cout << l2;
 
     // try
