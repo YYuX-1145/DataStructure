@@ -287,9 +287,6 @@ int mian() {
     l.push_back(1);
     std::cout<<l.count(1)<<std::endl;
     
-    it=l.find(1);
-    l.erase(it);  
-
     const CircularLinkedlist<int> l2 = l;
     std::cout << l2;
 
