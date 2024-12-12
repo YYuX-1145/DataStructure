@@ -15,7 +15,7 @@ int kmp(const string str1,const string str2)
     {
         while (j > 0 && str2[j] != str2[i])
         {
-            j = next[j - 1];
+            j = next[next[j-1]];
         }            
         if (str2[j] == str2[i])
             j++;
