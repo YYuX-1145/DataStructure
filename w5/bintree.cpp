@@ -16,6 +16,7 @@ class BinaryTree{
             private:
                 Node *ptr;
             public:
+                friend class BinaryTree;
                 Iterator(Node* p):ptr(p){}
                 int parent()
                 {
@@ -56,8 +57,27 @@ class BinaryTree{
                 }
                 T &operator*() { return ptr->data; }
         };
+        void free(BinaryTree<T>::Iterator &x)
+        {
+            auto it = x;
+            auto it2 = x;
+            if (!it.left())
+            {
+                free(it);
+            }
+            if (!it2.right())
+            {
+                free(it2);
+            }
+            delete x.ptr;
+        }
     public:
         BinaryTree(T data):rootptr(new Node(nullptr,data)){}
+        ~BinaryTree()
+        {
+            auto i = this->root();
+            free(i);
+        }
         Iterator root(){return Iterator(rootptr);}
 
 };
