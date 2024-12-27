@@ -12,13 +12,19 @@ void toheap(vector<int>& tar)
     }
     for (int i = 1; i <= tar.size() - 1;i++)
     {
-        int p = (i - i % 2) / 2;
-        if(!method(tar[p],tar[i]))
+        int n = i;
+        int p = (n - n % 2) / 2;  
+        if(n%2==0)
+            p--;
+        while(!method(tar[p],tar[n])&&n!=0)
         {
             int t = tar[p];
-            tar[p] = tar[i];
-            tar[i] = t;
-            i=p-1;
+            tar[p] = tar[n];
+            tar[n] = t;
+            p = (n - n % 2) / 2;
+            if (n % 2 == 0)
+                p--;
+            n = p;
             swap = true;
         }
     }
